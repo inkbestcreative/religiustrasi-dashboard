@@ -92,7 +92,7 @@ body{background-image:none}
 .side .logo{width:32px;height:32px;border-radius:10px;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
 .nav{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;color:#c9cedb;background:none;border:none;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;overflow:hidden;text-align:left;width:100%}
 .nav .ic{font-size:17px;width:20px;text-align:center;flex-shrink:0}.nav:hover{background:rgba(255,255,255,.06);color:#fff}.nav.on{background:rgba(232,131,58,.16);color:#fff;box-shadow:inset 3px 0 0 var(--accent)}
-.side .grow{flex:1}.who{font-size:11px;color:#8d95ab;padding:0 12px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.app.mini .who{display:none}.loading{color:var(--muted);padding:40px;text-align:center}.collapse{margin-top:auto}
+.side .grow{flex:1}.who{font-size:11px;color:#8d95ab;padding:0 12px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.app.mini .who{display:none}.pend{font-size:12px;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:999px;white-space:nowrap}.loading{color:var(--muted);padding:40px;text-align:center}.collapse{margin-top:auto}
 .app.mini .side{width:68px}.app.mini .nav .tx,.app.mini .brand .tx{display:none}
 main{flex:1;min-width:0}.view{display:none}.view.on{display:block}
 .btn{font:inherit;font-size:13px;font-weight:600;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--text);cursor:pointer;transition:transform .15s}.btn:hover{transform:translateY(-1px)}
@@ -159,7 +159,7 @@ function svgThumb(p){const n=[...String(p.id)].reduce((a,c)=>a+c.charCodeAt(0),0
  return "data:image/svg+xml;utf8,"+encodeURIComponent(svg);}
 const MK=[["views","views"],["likes","likes"],["comments","comments"],["shares","shares"],["saves","saves"],["followersGained","followers_gained"]];
 const fromRow=r=>({id:r.id,platform:r.platform,type:r.format,caption:r.caption,url:r.url||"",postedAt:r.posted_at,thumb:r.thumbnail_url||null,isSample:r.is_sample,
- metrics:{h12:Object.fromEntries(MK.map(([a,b])=>[a,Number(r["h12_"+b])])),w1:Object.fromEntries(MK.map(([a,b])=>[a,Number(r["w1_"+b])]))}});
+ metrics:{h12:Object.fromEntries(MK.map(([a,b])=>[a,r["h12_"+b]==null?null:Number(r["h12_"+b])])),w1:Object.fromEntries(MK.map(([a,b])=>[a,r["w1_"+b]==null?null:Number(r["w1_"+b])]))}});
 const toRow=p=>{const r={platform:p.platform,format:p.type,caption:p.caption,url:p.url||null,posted_at:p.postedAt,thumbnail_url:p.thumb||null,is_sample:false};
  MK.forEach(([a,b])=>{r["h12_"+b]=p.metrics.h12[a];r["w1_"+b]=p.metrics.w1[a]});return r};
 async function loadData(){LOADING=true;const {data,error}=await SB.from("posts").select("*").order("posted_at",{ascending:true});LOADING=false;
@@ -169,30 +169,34 @@ async function loadData(){LOADING=true;const {data,error}=await SB.from("posts")
 function dbErr(error){const m=/row-level security|JWT|permission/i.test(error.message)?"Sesi login habis atau tidak punya akses. Silakan masuk lagi.":error.message;toast("⚠️ "+m);}
 const C = {accent:"#1f2a44",accent2:"#e8833a"};Chart.defaults.color="#4b5563";Chart.defaults.font.size=12;Chart.defaults.font.family="'Plus Jakarta Sans',sans-serif";Chart.defaults.animation.duration=location.hash.includes("static")?0:900;Chart.defaults.layout.padding={left:6};Chart.defaults.animation.easing="easeOutQuart";
 
-const er = m => m.views>0?(m.likes+m.comments+m.shares+m.saves)/m.views*100:0;
-const fmt = n => n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" jt":n>=1e3?(n/1e3).toFixed(1).replace(".",",")+" rb":String(n);
+const er = m => (m&&m.views>0&&[m.likes,m.comments,m.shares,m.saves].every(v=>v!=null&&v!==""&&!isNaN(v)))?(+m.likes+ +m.comments+ +m.shares+ +m.saves)/m.views*100:null;
+const NA = n => n==null||Number.isNaN(n);
+const fmt = n => NA(n)?"—":n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" jt":n>=1e3?(n/1e3).toFixed(1).replace(".",",")+" rb":String(n);
 const countUp=()=>location.hash.includes('static')||document.querySelectorAll('[data-count]').forEach(el=>{const t=+el.dataset.count,k=el.dataset.kind,t0=performance.now();const f=now=>{const q=Math.min(1,(now-t0)/800),v=t*(1-Math.pow(1-q,3));el.textContent=k==='p'?pct(v):fmt(Math.round(v));if(q<1)requestAnimationFrame(f)};requestAnimationFrame(f)});
-const pct = n => n.toFixed(1).replace(".",",")+"%";
+const pct = n => NA(n)?"—":n.toFixed(1).replace(".",",")+"%";
 const dt = s => new Date(s).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
 const pname = p => p==="tiktok"?"♪ TikTok":"◎ Instagram";
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
 const short = s => s.length>26?s.slice(0,25)+"…":s;
-const val = (p,k) => st.met==="views"?p.metrics[k].views:+er(p.metrics[k]).toFixed(2);
+const val = (p,k) => {if(st.met==="views")return p.metrics[k].views??null;const e=er(p.metrics[k]);return e==null?null:+e.toFixed(2)};
+const w1v = p => p.metrics.w1.views==null?'<span class="pend">Belum 7 hari</span>':fmt(p.metrics.w1.views);
+const w1e = p => p.metrics.w1.views==null?"—":pct(er(p.metrics.w1));
+const srt = v => v==null?-1:v;
 let chart;
 
 function filtered(){ let a=P.filter(p=>st.plat==="all"||p.platform===st.plat);
  const k=st.per==="h12"?"h12":"w1";
- a.sort((x,y)=>st.sort==="date"?new Date(y.postedAt)-new Date(x.postedAt):st.sort==="er"?er(y.metrics[k])-er(x.metrics[k]):y.metrics[k].views-x.metrics[k].views);
+ a.sort((x,y)=>st.sort==="date"?new Date(y.postedAt)-new Date(x.postedAt):st.sort==="er"?srt(er(y.metrics[k]))-srt(er(x.metrics[k])):srt(y.metrics[k].views)-srt(x.metrics[k].views));
  return a;}
 
 function cards(){ const a=P.filter(p=>st.plat==="all"||p.platform===st.plat);
  if(!a.length){document.getElementById("cards").innerHTML=`<div class="card" style="grid-column:1/-1"><div class="lbl">${LOADING?"⏳ Memuat data…":"Belum ada konten. Tambahkan di menu Kelola Konten."}</div></div>`;return}
- const tv=a.reduce((s,p)=>s+p.metrics.w1.views,0), ae=a.reduce((s,p)=>s+er(p.metrics.w1),0)/a.length;
- const best=[...a].sort((x,y)=>y.metrics.w1.views-x.metrics.w1.views)[0];
- const bestEr=[...a].sort((x,y)=>er(y.metrics.w1)-er(x.metrics.w1))[0];
+ const w1a=a.filter(p=>p.metrics.w1.views!=null), tv=w1a.reduce((s,p)=>s+p.metrics.w1.views,0), ers=a.map(p=>er(p.metrics.w1)).filter(v=>v!=null), ae=ers.length?ers.reduce((s,v)=>s+v,0)/ers.length:null;
+ const best=[...a].sort((x,y)=>srt(y.metrics.w1.views)-srt(x.metrics.w1.views))[0];
+ const bestEr=[...a].sort((x,y)=>srt(er(y.metrics.w1))-srt(er(x.metrics.w1)))[0];
  document.getElementById("cards").innerHTML=`
- <div class="card"><span class="emo">👀</span><div class="lbl">Total views (1 minggu)</div><div class="val" data-count="${tv}" data-kind="n">${fmt(tv)}</div><div class="note">${a.length} konten</div></div>
- <div class="card"><span class="emo">💬</span><div class="lbl">Rata-rata engagement rate <span class="tip" data-tip="Engagement Rate = (like + komentar + share + save) ÷ views. Contoh: 100 interaksi dari 1.000 views = 10%.">?</span></div><div class="val" data-count="${ae}" data-kind="p">${pct(ae)}</div><div class="note">dihitung pada 1 minggu</div></div>
+ <div class="card"><span class="emo">👀</span><div class="lbl">Total views (1 minggu)</div><div class="val" data-count="${tv}" data-kind="n">${fmt(tv)}</div><div class="note">${w1a.length===a.length?a.length+" konten":w1a.length+" dari "+a.length+" konten (yang sudah 7 hari)"}</div></div>
+ <div class="card"><span class="emo">💬</span><div class="lbl">Rata-rata engagement rate <span class="tip" data-tip="Engagement Rate = (like + komentar + share + save) ÷ views. Contoh: 100 interaksi dari 1.000 views = 10%.">?</span></div><div class="val" ${ae==null?"":`data-count="${ae}" data-kind="p"`}>${pct(ae)}</div><div class="note">dihitung pada 1 minggu${ers.length<a.length?` · ${ers.length} konten ada datanya`:""}</div></div>
  <div class="card" style="cursor:pointer" onclick="openD('${best.id}')"><span class="emo">🏆</span><div class="lbl">Konten terbaik (views)</div><div class="val" style="font-size:18px;margin-top:12px">${esc(short(best.caption))}</div><div class="note">${pname(best.platform)} · ${fmt(best.metrics.w1.views)} views</div></div>
  <div class="card" style="cursor:pointer" onclick="openD('${bestEr.id}')"><span class="emo">🔥</span><div class="lbl">Interaksi terbaik (ER)</div><div class="val" style="font-size:18px;margin-top:12px">${esc(short(bestEr.caption))}</div><div class="note">${pname(bestEr.platform)} · ER ${pct(er(bestEr.metrics.w1))}</div></div>`;countUp();}
 
@@ -207,7 +211,7 @@ function draw(){ cards(); document.getElementById('ncount').textContent=filtered
  if(chart){chart.destroy();chart=null}
  if(!a.length){cb.style.display="none";tb.style.display="block";tb.innerHTML='<p class="hint" style="padding:40px;text-align:center">Belum ada konten dipilih. Klik tombol “Pilih konten” di atas.</p>';return}
  if(st.type==="table"){cb.style.display="none";tb.style.display="block";
-  tb.innerHTML=`<div style="overflow:auto"><table><thead><tr><th>Konten</th><th>Platform</th><th>Tanggal</th><th>Views 12 jam</th><th>ER 12 jam</th><th>Views 1 minggu</th><th>ER 1 minggu</th></tr></thead><tbody>${a.map(p=>`<tr onclick="openD('${p.id}')"><td><div style="display:flex;gap:10px;align-items:center"><img class="thumb sm" src="${thumbOf(p)}" alt="">${esc(short(p.caption))}</div></td><td><span class="pf ${p.platform==="tiktok"?"tt":"ig"}">${pname(p.platform)}</span></td><td>${dt(p.postedAt)}</td><td>${fmt(p.metrics.h12.views)}</td><td>${pct(er(p.metrics.h12))}</td><td>${fmt(p.metrics.w1.views)}</td><td>${pct(er(p.metrics.w1))}</td></tr>`).join("")}</tbody></table></div>`;return}
+  tb.innerHTML=`<div style="overflow:auto"><table><thead><tr><th>Konten</th><th>Platform</th><th>Tanggal</th><th>Views 12 jam</th><th>ER 12 jam</th><th>Views 1 minggu</th><th>ER 1 minggu</th></tr></thead><tbody>${a.map(p=>`<tr onclick="openD('${p.id}')"><td><div style="display:flex;gap:10px;align-items:center"><img class="thumb sm" src="${thumbOf(p)}" alt="">${esc(short(p.caption))}</div></td><td><span class="pf ${p.platform==="tiktok"?"tt":"ig"}">${pname(p.platform)}</span></td><td>${dt(p.postedAt)}</td><td>${fmt(p.metrics.h12.views)}</td><td>${pct(er(p.metrics.h12))}</td><td>${w1v(p)}</td><td>${w1e(p)}</td></tr>`).join("")}</tbody></table></div>`;return}
  tb.style.display="none";cb.style.display="block";
  const ds=[]; if(st.per!=="w1")ds.push({label:"12 jam",data:a.map(p=>val(p,"h12")),backgroundColor:C.accent2,borderColor:C.accent2});
  if(st.per!=="h12")ds.push({label:"1 minggu",data:a.map(p=>val(p,"w1")),backgroundColor:C.accent,borderColor:C.accent});
@@ -226,8 +230,8 @@ function openD(id){ const p=P.find(x=>x.id===id),a=p.metrics.h12,b=p.metrics.w1;
  const r=(l,k,f=fmt)=>`<tr><td>${l}</td><td>${f(a[k])}</td><td>${f(b[k])}</td></tr>`;
  document.getElementById("mbox").innerHTML=`<button class="close" onclick="closeD()">✕</button><span class="pf ${p.platform==="tiktok"?"tt":"ig"}">${pname(p.platform)} · ${p.type}</span>
  <img class="thumb lg" src="${thumbOf(p)}" alt=""><h2>${esc(p.caption)}</h2>${p.url?`<p style="margin:0 0 4px"><a href="${esc(p.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">Buka postingan ↗</a></p>`:""}<p class="sub">Diunggah ${dt(p.postedAt)} · ${new Date(p.postedAt).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})} WIB</p>
- <div class="cards mt" style="grid-template-columns:1fr 1fr;margin-bottom:0"><div class="card"><div class="lbl">Views 1 minggu</div><div class="val">${fmt(b.views)}</div><div class="note">${fmt(a.views)} di 12 jam pertama</div></div>
- <div class="card"><div class="lbl">ER 1 minggu <span class="tip" data-tip="(like + komentar + share + save) ÷ views">?</span></div><div class="val">${pct(er(b))}</div><div class="note">${pct(er(a))} di 12 jam pertama</div></div></div>
+ <div class="cards mt" style="grid-template-columns:1fr 1fr;margin-bottom:0"><div class="card"><div class="lbl">Views 1 minggu</div><div class="val">${b.views==null?'<span style="font-size:20px">Belum 7 hari ⏳</span>':fmt(b.views)}</div><div class="note">${fmt(a.views)} di 12 jam pertama</div></div>
+ <div class="card"><div class="lbl">ER 1 minggu <span class="tip" data-tip="(like + komentar + share + save) ÷ views">?</span></div><div class="val">${b.views==null?'<span style="font-size:20px">—</span>':pct(er(b))}</div><div class="note">${pct(er(a))} di 12 jam pertama</div></div></div>
  <table class="mt"><thead><tr><th>Detail</th><th>12 jam</th><th>1 minggu</th></tr></thead><tbody>${r("Views","views")}${r("Like","likes")}${r("Komentar","comments")}${r("Share","shares")}${r("Save","saves")}${r("Followers baru","followersGained")}<tr><td><b>Engagement rate</b></td><td><b>${pct(er(a))}</b></td><td><b>${pct(er(b))}</b></td></tr></tbody></table>
  ${IS_SAMPLE?'<p class="legend">Data contoh — angka ini belum diambil dari akun asli.</p>':""}${SESSION?`<div class="factions"><button class="btn" onclick="closeD();openForm('${p.id}')">✎ Edit konten</button></div>`:""}`;
  document.getElementById("mbox").classList.remove("wide");
@@ -260,7 +264,7 @@ function refresh(){badges();list();draw();if(document.getElementById("vCms").cla
 /* ===== CMS ===== */
 const cst={q:"",plat:"all"};
 function renderCms(){const q=cst.q.toLowerCase();const a=P.filter(p=>(cst.plat==="all"||p.platform===cst.plat)&&p.caption.toLowerCase().includes(q)).sort((x,y)=>new Date(y.postedAt)-new Date(x.postedAt));
- document.getElementById("cmsList").innerHTML=a.length?`<table class="cmstable"><thead><tr><th>Konten</th><th>Platform</th><th class="hm">Tanggal</th><th>Views 1 minggu</th><th>ER 1 minggu</th><th>Aksi</th></tr></thead><tbody>${a.map(p=>`<tr data-id="${p.id}"><td class="cap"><div style="display:flex;gap:12px;align-items:center"><img class="thumb" src="${thumbOf(p)}" alt=""><div style="min-width:0"><b>${esc(p.caption)}</b><small>${esc(p.type)}</small></div></div></td><td><span class="pf ${p.platform==="tiktok"?"tt":"ig"}">${pname(p.platform)}</span></td><td class="hm">${dt(p.postedAt)}</td><td>${fmt(p.metrics.w1.views)}</td><td>${pct(er(p.metrics.w1))}</td><td class="acts"><button class="btn" data-e="${p.id}">✎ Edit</button> <button class="btn danger" data-del="${p.id}">🗑 Hapus</button></td></tr>`).join("")}</tbody></table>`:`<div class="empty">${P.length?"Tidak ada konten yang cocok dengan pencarian.":"Belum ada konten. Klik “Tambah Konten” untuk mulai."}</div>`;
+ document.getElementById("cmsList").innerHTML=a.length?`<table class="cmstable"><thead><tr><th>Konten</th><th>Platform</th><th class="hm">Tanggal</th><th>Views 1 minggu</th><th>ER 1 minggu</th><th>Aksi</th></tr></thead><tbody>${a.map(p=>`<tr data-id="${p.id}"><td class="cap"><div style="display:flex;gap:12px;align-items:center"><img class="thumb" src="${thumbOf(p)}" alt=""><div style="min-width:0"><b>${esc(p.caption)}</b><small>${esc(p.type)}</small></div></div></td><td><span class="pf ${p.platform==="tiktok"?"tt":"ig"}">${pname(p.platform)}</span></td><td class="hm">${dt(p.postedAt)}</td><td>${w1v(p)}</td><td>${w1e(p)}</td><td class="acts"><button class="btn" data-e="${p.id}">✎ Edit</button> <button class="btn danger" data-del="${p.id}">🗑 Hapus</button></td></tr>`).join("")}</tbody></table>`:`<div class="empty">${P.length?"Tidak ada konten yang cocok dengan pencarian.":"Belum ada konten. Klik “Tambah Konten” untuk mulai."}</div>`;
  document.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>openForm(b.dataset.e));
  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>delPost(b.dataset.del));}
 document.getElementById("cq").oninput=e=>{cst.q=e.target.value;renderCms()};
@@ -281,7 +285,7 @@ const MF=[["views","Views"],["likes","Like"],["comments","Komentar"],["shares","
 let formThumb=null;
 function localDT(iso){const d=iso?new Date(iso):new Date();const z=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`}
 function openForm(id){const p=id?P.find(x=>x.id===id):null;formThumb=p?p.thumb||null:null;
- const v=(k,m)=>p?p.metrics[k][m]:"";
+ const v=(k,m)=>p&&p.metrics[k][m]!=null?p.metrics[k][m]:"";
  const mb=document.getElementById("mbox");mb.classList.add("wide");
  mb.innerHTML=`<div class="fhead"><h2 style="margin:0">${p?"✎ Edit konten":"＋ Tambah konten"}</h2><button class="close" onclick="closeD()">✕</button></div>
  <form class="form" id="pform" novalidate>
@@ -293,13 +297,13 @@ function openForm(id){const p=id?P.find(x=>x.id===id):null;formThumb=p?p.thumb||
  <div class="full"><div class="lbl" style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">Thumbnail</div>
   <div class="drop" id="drop"><img id="tprev" src="${p?thumbOf(p):svgThumb({id:"new"+Date.now(),platform:"tiktok"})}" alt=""><div><b>Klik atau seret gambar ke sini</b><div class="sub" style="font-size:12px">JPG/PNG, otomatis diperkecil. Kosongkan = pakai gambar otomatis.</div><button type="button" class="btn ghost" id="tclear" style="padding:4px 0;color:var(--accent)">Pakai gambar otomatis</button></div><input type="file" id="tfile" accept="image/*" hidden></div><span class="err" data-err="thumb"></span></div>
  <div class="full"><div class="numgrid"><span></span><span class="h">12 jam</span><span class="h">1 minggu</span>
- ${MF.map(([k,l])=>`<span>${l}</span><input type="number" min="0" step="1" inputmode="numeric" name="h12_${k}" value="${v("h12",k)}" placeholder="0"><input type="number" min="0" step="1" inputmode="numeric" name="w1_${k}" value="${v("w1",k)}" placeholder="0">`).join("")}
+ ${MF.map(([k,l])=>`<span>${l}</span><input type="number" min="0" step="1" inputmode="numeric" name="h12_${k}" value="${v("h12",k)}" placeholder="—"><input type="number" min="0" step="1" inputmode="numeric" name="w1_${k}" value="${v("w1",k)}" placeholder="—">`).join("")}
  </div><span class="err" data-err="nums"></span></div>
  <div class="full erlive"><div><span class="sub" style="font-size:12px">ER 12 jam (otomatis)</span><b id="er12">–</b></div><div><span class="sub" style="font-size:12px">ER 1 minggu (otomatis)</span><b id="er1w">–</b></div></div>
- <p class="sub full" style="font-size:12px;margin:0">ER = (like + komentar + share + save) ÷ views</p>
+ <p class="sub full" style="font-size:12px;margin:0">ER = (like + komentar + share + save) ÷ views. Kosongkan angka yang belum ada; kolom 1 minggu boleh kosong kalau belum 7 hari.</p>
  <div class="full factions"><button type="button" class="btn" onclick="closeD()">Batal</button><button type="submit" class="btn dark">${p?"Simpan perubahan":"Simpan konten"}</button></div></form>`;
  const f=document.getElementById("pform");if(p){f.platform.value=p.platform;f.type.value=p.type}
- const live=()=>{["h12","w1"].forEach(k=>{const m={};MF.forEach(([x])=>m[x]=+f[k+"_"+x].value||0);document.getElementById(k==="h12"?"er12":"er1w").textContent=m.views>0?pct(er(m)):"–"})};
+ const live=()=>{["h12","w1"].forEach(k=>{const m={};MF.forEach(([x])=>{const v=f[k+"_"+x].value.trim();m[x]=v===""?null:+v});document.getElementById(k==="h12"?"er12":"er1w").textContent=k==="w1"&&m.views==null?"Belum 7 hari":pct(er(m))})};
  f.oninput=e=>{live();if(e.target.classList.contains("bad"))e.target.classList.remove("bad");if(e.target.name==="platform"&&!formThumb)document.getElementById("tprev").src=svgThumb({id:p?p.id:"new",platform:f.platform.value})};live();
  const drop=document.getElementById("drop"),tf=document.getElementById("tfile");
  drop.onclick=e=>{if(e.target.id!=="tclear")tf.click()};tf.onchange=()=>tf.files[0]&&readImg(tf.files[0]);
@@ -317,10 +321,10 @@ function submitForm(f,p){document.querySelectorAll("#pform .err").forEach(x=>x.t
  if(!f.postedAt.value)bad("postedAt","Pilih tanggal dan jam upload.",f.postedAt);else if(new Date(f.postedAt.value)>new Date(Date.now()+864e5))bad("postedAt","Tanggal upload tidak boleh di masa depan.",f.postedAt);
  const url=f.url.value.trim();if(url&&!/^https?:\/\/\S+\.\S+/.test(url))bad("url","Link harus diawali http:// atau https://",f.url);
  const m={h12:{},w1:{}};
- ["h12","w1"].forEach(k=>MF.forEach(([x,l])=>{const el=f[k+"_"+x],raw=el.value.trim();const n=raw===""?NaN:Number(raw);
-  if(raw===""){bad("nums","Semua angka wajib diisi (isi 0 kalau memang tidak ada).",el)}else if(!Number.isFinite(n)||n<0||!Number.isInteger(n)){bad("nums","Angka harus bilangan bulat dan tidak boleh minus.",el)}m[k][x]=n}));
- if(ok){["h12","w1"].forEach(k=>{if(m[k].views<=0)bad("nums",`Views ${k==="h12"?"12 jam":"1 minggu"} harus lebih dari 0 supaya ER bisa dihitung.`,f[k+"_views"])});
-  MF.forEach(([x,l])=>{if(m.w1[x]<m.h12[x])bad("nums",`${l} di 1 minggu tidak boleh lebih kecil dari 12 jam (angka hanya bisa bertambah).`,f["w1_"+x])})}
+ ["h12","w1"].forEach(k=>MF.forEach(([x,l])=>{const el=f[k+"_"+x],raw=el.value.trim();let n=raw===""?NaN:Number(raw);
+  if(raw===""){n=null}else if(!Number.isFinite(n)||n<0||!Number.isInteger(n)){bad("nums","Angka harus bilangan bulat dan tidak boleh minus.",el)}m[k][x]=n}));
+ if(ok){if(!(m.h12.views>0))bad("nums","Views 12 jam wajib diisi dan harus lebih dari 0.",f.h12_views);if(m.w1.views===0)bad("nums","Views 1 minggu harus lebih dari 0 (kosongkan kalau belum 7 hari).",f.w1_views);
+  MF.forEach(([x,l])=>{if(m.w1[x]!=null&&m.h12[x]!=null&&m.w1[x]<m.h12[x])bad("nums",`${l} di 1 minggu tidak boleh lebih kecil dari 12 jam (angka hanya bisa bertambah).`,f["w1_"+x])})}
  if(!ok){const first=f.querySelector(".bad");first&&first.focus();return}
  const btn=f.querySelector('[type=submit]');btn.disabled=true;const btxt=btn.textContent;btn.textContent="Menyimpan…";
  (async()=>{try{let thumb=formThumb||null;
