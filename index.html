@@ -219,8 +219,14 @@ function draw(){ cards(); document.getElementById('ncount').textContent=filtered
  ds.forEach(d=>Object.assign(d,{borderRadius:3,borderSkipped:false,maxBarThickness:28,tension:.3,pointRadius:4,borderWidth:st.type==="line"?2:0}));
  const lab=st.view==="timeline"?a.map(p=>dt(p.postedAt)):a.map(p=>short(p.caption));
  const hz=st.type==="hbar", tick=v=>st.met==="views"?fmt(v):v+"%";
- chart=new Chart(document.getElementById("chart"),{type:st.type==="line"?"line":"bar",data:{labels:lab,datasets:ds},
-  options:{indexAxis:hz?"y":"x",maintainAspectRatio:false,responsive:true,
+ const showLbl=a.length<=10&&st.type!=="line", both=ds.length>1;
+ const valLabels={id:"valLabels",afterDatasetsDraw(ch){if(!showLbl)return;const c=ch.ctx;c.save();
+  c.font=`600 ${both?(a.length>6?10:11):12}px 'Plus Jakarta Sans',sans-serif`;c.fillStyle="#1f2a44";
+  ch.data.datasets.forEach((d,di)=>{const meta=ch.getDatasetMeta(di);if(meta.hidden)return;meta.data.forEach((el,i)=>{const v=d.data[i];if(v==null||Number.isNaN(v))return;
+   const t=st.met==="views"?fmt(v):pct(v);
+   if(hz){c.textAlign="left";c.textBaseline="middle";c.fillText(t,el.x+5,el.y)}else{c.textAlign="center";c.textBaseline="bottom";c.fillText(t,el.x,el.y-4)}})});c.restore()}};
+ chart=new Chart(document.getElementById("chart"),{type:st.type==="line"?"line":"bar",data:{labels:lab,datasets:ds},plugins:[valLabels],
+  options:{layout:{padding:showLbl?(hz?{left:6,right:56}:{left:6,top:22}):{left:6}},indexAxis:hz?"y":"x",maintainAspectRatio:false,responsive:true,
    onClick:(e,el)=>{if(el.length)openD(a[el[0].index].id)},
    plugins:{legend:{position:"top",align:"end",labels:{boxWidth:10,boxHeight:10,usePointStyle:true}},
     tooltip:{callbacks:{title:i=>a[i[0].dataIndex].caption+" ("+pname(a[i[0].dataIndex].platform)+")",label:c=>c.dataset.label+": "+(st.met==="views"?fmt(c.raw)+" views":c.raw.toString().replace(".",",")+"% ER")}}},
