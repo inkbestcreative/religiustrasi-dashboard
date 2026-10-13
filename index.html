@@ -92,7 +92,7 @@ body{background-image:none}
 .side .logo{width:32px;height:32px;border-radius:10px;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
 .nav{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;color:#c9cedb;background:none;border:none;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;overflow:hidden;text-align:left;width:100%}
 .nav .ic{font-size:17px;width:20px;text-align:center;flex-shrink:0}.nav:hover{background:rgba(255,255,255,.06);color:#fff}.nav.on{background:rgba(232,131,58,.16);color:#fff;box-shadow:inset 3px 0 0 var(--accent)}
-.side .grow{flex:1}.who{font-size:11px;color:#8d95ab;padding:0 12px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.app.mini .who{display:none}.pend{font-size:12px;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:999px;white-space:nowrap}.loading{color:var(--muted);padding:40px;text-align:center}.collapse{margin-top:auto}
+.side .grow{flex:1}.who{font-size:11px;color:#8d95ab;padding:0 12px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.app.mini .who{display:none}.pend{font-size:12px;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:999px;white-space:nowrap}.prev{max-height:50vh;overflow:auto;border:1px solid var(--line);border-radius:12px}.prev table{font-size:12px}.prev td,.prev th{padding:7px 8px;white-space:nowrap;text-align:left}.prev td.c{max-width:220px;overflow:hidden;text-overflow:ellipsis}.st-ok{color:#1f2a44;font-weight:600}.st-up{color:var(--accent);font-weight:600}.st-err{color:#b4441d;white-space:normal!important;min-width:220px}.loading{color:var(--muted);padding:40px;text-align:center}.collapse{margin-top:auto}
 .app.mini .side{width:68px}.app.mini .nav .tx,.app.mini .brand .tx{display:none}
 main{flex:1;min-width:0}.view{display:none}.view.on{display:block}
 .btn{font:inherit;font-size:13px;font-weight:600;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--text);cursor:pointer;transition:transform .15s}.btn:hover{transform:translateY(-1px)}
@@ -138,7 +138,7 @@ main{flex:1;min-width:0}.view{display:none}.view.on{display:block}
 </section>
 <section class="view" id="vCms"><header><div><h1>Kelola Konten 🗂️</h1><p class="sub">Tambah, ubah, atau hapus data postingan. Perubahan langsung muncul di Dashboard.</p></div><span class="badge sbadge">● Data contoh</span></header>
 <div id="cmsGate" class="card panel" style="display:none;max-width:440px"><h3>🔒 Masuk dulu untuk mengelola konten</h3><p class="sub" style="margin:0 8px 16px">Dashboard bisa dilihat semua orang. Untuk menambah, mengubah, atau menghapus konten, masuk dengan akun tim.</p><button class="btn dark" onclick="openLogin()">🔑 Masuk</button></div><div id="cmsBody"><div class="cmsbar"><input type="search" id="cq" placeholder="🔍 Cari caption…"><div class="seg" id="cPlat"><button class="on" data-x="all">Semua</button><button data-x="tiktok">TikTok</button><button data-x="instagram">Instagram</button></div><div style="flex:1"></div>
-<button class="btn" id="bExp">⬇ Export JSON</button><label class="btn" style="display:inline-flex">⬆ Import JSON<input type="file" id="bImp" accept=".json,application/json" hidden></label><button class="btn ghost" id="bReset">↻ Muat ulang data</button><button class="btn pri" id="bAdd">＋ Tambah Konten</button></div>
+<button class="btn" id="bCsvExp">⬇ Export CSV</button><label class="btn" style="display:inline-flex">⬆ Import CSV<input type="file" id="bCsvImp" accept=".csv,text/csv" hidden></label><button class="btn ghost" id="bCsvTpl">📄 Template CSV</button><button class="btn" id="bExp">⬇ Export JSON</button><label class="btn" style="display:inline-flex">⬆ Import JSON<input type="file" id="bImp" accept=".json,application/json" hidden></label><button class="btn ghost" id="bReset">↻ Muat ulang data</button><button class="btn pri" id="bAdd">＋ Tambah Konten</button></div>
 <div class="card panel"><div style="overflow:auto" id="cmsList"></div></div></div></section>
 <section class="view" id="vSet"><header><div><h1>Pengaturan ⚙️</h1><p class="sub">Data tersimpan online (Supabase) dan sama untuk semua orang di kantor.</p></div></header>
 <div class="card panel"><p>🔌 <b>Koneksi akun</b> — belum tersedia di prototipe ini.</p><p class="sub">Data disimpan di database online bersama. Gunakan Export JSON di Kelola Konten untuk backup.</p></div></section>
@@ -158,7 +158,7 @@ function svgThumb(p){const n=[...String(p.id)].reduce((a,c)=>a+c.charCodeAt(0),0
  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="${bg}"/>${shape}<text x="8" y="92" font-family="sans-serif" font-size="14" font-weight="700" fill="#f6f4ef">${tt?"♪":"◎"}</text></svg>`;
  return "data:image/svg+xml;utf8,"+encodeURIComponent(svg);}
 const MK=[["views","views"],["likes","likes"],["comments","comments"],["shares","shares"],["saves","saves"],["followersGained","followers_gained"]];
-const fromRow=r=>({id:r.id,platform:r.platform,type:r.format,caption:r.caption,url:r.url||"",postedAt:r.posted_at,thumb:r.thumbnail_url||null,isSample:r.is_sample,
+const fromRow=r=>({id:r.id,platform:r.platform,type:r.format,caption:r.caption,url:r.url||"",postedAt:r.posted_at,thumb:r.thumbnail_url||null,isSample:r.is_sample,notes:r.notes||"",
  metrics:{h12:Object.fromEntries(MK.map(([a,b])=>[a,r["h12_"+b]==null?null:Number(r["h12_"+b])])),w1:Object.fromEntries(MK.map(([a,b])=>[a,r["w1_"+b]==null?null:Number(r["w1_"+b])]))}});
 const toRow=p=>{const r={platform:p.platform,format:p.type,caption:p.caption,url:p.url||null,posted_at:p.postedAt,thumbnail_url:p.thumb||null,is_sample:false};
  MK.forEach(([a,b])=>{r["h12_"+b]=p.metrics.h12[a];r["w1_"+b]=p.metrics.w1[a]});return r};
@@ -337,6 +337,60 @@ function submitForm(f,p){document.querySelectorAll("#pform .err").forEach(x=>x.t
   const saved=fromRow(data[0]);if(p){const old=thumbPath(p.thumb);if(old&&p.thumb!==saved.thumb)SB.storage.from("thumbnails").remove([old]);P[P.indexOf(p)]=saved}else{P.push(saved);st.sel.add(saved.id)}
   IS_SAMPLE=P.length>0&&P.every(x=>x.isSample);closeD();refresh();toast(p?"✅ Perubahan disimpan":"✅ Konten baru ditambahkan");
  }catch(e){btn.disabled=false;btn.textContent=btxt;dbErr(e)}})();}
+/* ===== CSV ===== */
+const CSV_MK=[["views","views"],["likes","like"],["comments","komentar"],["shares","share"],["saves","save"],["followersGained","followers_baru"]];
+const CSV_HEAD=["platform","format","caption","tanggal_upload","link",...CSV_MK.map(([,h])=>h+"_12jam"),...CSV_MK.map(([,h])=>h+"_7hari"),"catatan"];
+const wib=iso=>{const d=new Date(new Date(iso).getTime()+7*3600e3);return d.toISOString().slice(0,16).replace("T"," ")};
+const csvCell=v=>{v=v==null?"":String(v);return /[",;\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+function dl(name,text,type){const b=new Blob([text],{type});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function postsToCsv(list){const rows=[CSV_HEAD,...list.map(p=>[p.platform,p.type,p.caption,wib(p.postedAt),p.url||"",...CSV_MK.map(([k])=>p.metrics.h12[k]),...CSV_MK.map(([k])=>p.metrics.w1[k]),p.notes||""])];
+ return "\ufeff"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n")+"\r\n"}
+function parseCsv(text){text=text.replace(/^\ufeff/,"");const first=text.split(/\r?\n/)[0]||"";const d=(first.split(";").length>first.split(",").length)?";":",";
+ const rows=[];let row=[],f="",q=false;for(let i=0;i<text.length;i++){const c=text[i];
+  if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+  else if(c==='"')q=true;else if(c===d){row.push(f);f=""}else if(c==="\n"||c==="\r"){if(c==="\r"&&text[i+1]==="\n")i++;row.push(f);rows.push(row);row=[];f=""}else f+=c}
+ if(f!==""||row.length){row.push(f);rows.push(row)}return rows.filter(r=>r.some(x=>x.trim()!==""))}
+function parseWibDate(v){v=v.trim();let m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2})[:.](\d{2}))?/)||null,y,mo,d,h=0,mi=0;
+ if(m){[,y,mo,d]=m;h=m[4]||0;mi=m[5]||0}else if(m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2})[:.](\d{2}))?/)){[,d,mo,y]=m;h=m[4]||0;mi=m[5]||0}else return null;
+ const t=Date.UTC(+y,+mo-1,+d,+h-7,+mi);const chk=new Date(t+7*3600e3);if(isNaN(t)||chk.getUTCDate()!==+d||chk.getUTCMonth()!==+mo-1)return null;return new Date(t).toISOString()}
+const keyOf=(plat,cap,iso)=>plat+"|"+cap.trim().toLowerCase().replace(/\s+/g," ")+"|"+wib(iso).slice(0,10);
+function csvToItems(text){const rows=parseCsv(text);if(!rows.length)return {error:"File kosong."};
+ const head=rows[0].map(h=>h.trim().toLowerCase());const miss=["platform","caption","tanggal_upload","views_12jam"].filter(h=>!head.includes(h));
+ if(miss.length)return {error:"Kolom wajib tidak ditemukan: "+miss.join(", ")+". Pakai tombol Template CSV supaya formatnya pas."};
+ const idx=h=>head.indexOf(h),get=(r,h)=>idx(h)<0?"":(r[idx(h)]??"").trim();const ex=new Map(P.map(p=>[keyOf(p.platform,p.caption,p.postedAt),p]));const seen=new Set();
+ const items=rows.slice(1).map((r,i)=>{const errs=[];const line=i+2;
+  let plat=get(r,"platform").toLowerCase();if(plat==="ig")plat="instagram";if(plat==="tt")plat="tiktok";if(!["tiktok","instagram"].includes(plat))errs.push("platform harus TikTok atau Instagram");
+  let fmtv=get(r,"format")||(plat==="instagram"?"Reels":"Video");fmtv=fmtv.charAt(0).toUpperCase()+fmtv.slice(1).toLowerCase();if(!["Video","Reels","Carousel","Foto"].includes(fmtv))errs.push("format harus Video/Reels/Carousel/Foto");
+  const cap=get(r,"caption");if(!cap)errs.push("caption kosong");
+  const iso=parseWibDate(get(r,"tanggal_upload"));if(!iso)errs.push("tanggal_upload tidak valid (contoh: 2026-10-11 18:20)");
+  const link=get(r,"link");if(link&&!/^https?:\/\/\S+/.test(link))errs.push("link harus diawali http(s)://");
+  const m={h12:{},w1:{}};[["h12","12jam"],["w1","7hari"]].forEach(([k,suf])=>CSV_MK.forEach(([mk,h])=>{let v=get(r,h+"_"+suf).replace(/[.\s](?=\d{3}(\D|$))/g,"");
+   if(v===""){m[k][mk]=null;return}const n=Number(v.replace(",","."));if(!Number.isInteger(n)||n<0){errs.push(`${h}_${suf} harus angka bulat ≥ 0`);m[k][mk]=null}else m[k][mk]=n}));
+  if(!(m.h12.views>0))errs.push("views_12jam wajib > 0");
+  CSV_MK.forEach(([mk,h])=>{if(m.w1[mk]!=null&&m.h12[mk]!=null&&m.w1[mk]<m.h12[mk])errs.push(`${h}_7hari lebih kecil dari ${h}_12jam`)});
+  let match=null;if(!errs.length){const k=keyOf(plat,cap,iso);if(seen.has(k))errs.push("baris ganda di file (platform+caption+tanggal sama)");seen.add(k);match=ex.get(k)||null}
+  const row={platform:plat,format:fmtv,caption:cap,posted_at:iso,url:link||null,is_sample:false};CSV_MK.forEach(([mk],j)=>{const col=MK[j][1];row["h12_"+col]=m.h12[mk];row["w1_"+col]=m.w1[mk]});
+  if(idx("catatan")>=0)row.notes=get(r,"catatan")||null;
+  return {line,errs,row,match,cap,plat,date:iso?wib(iso):get(r,"tanggal_upload")}});
+ return {items}}
+document.getElementById("bCsvExp").onclick=()=>{dl("religiustrasi-konten-"+new Date().toISOString().slice(0,10)+".csv",postsToCsv([...P].sort((a,b)=>new Date(b.postedAt)-new Date(a.postedAt))),"text/csv;charset=utf-8");toast("⬇ CSV diunduh")};
+document.getElementById("bCsvTpl").onclick=()=>{const ex=[CSV_HEAD,["tiktok","Video","Contoh caption, boleh pakai koma","2026-10-11 18:22","https://www.tiktok.com/@religiustrasi/video/123","127100","","","","","","","","","","","","Kosongkan kolom 7hari kalau belum 7 hari"]];
+ dl("template-konten.csv","\ufeff"+ex.map(r=>r.map(csvCell).join(",")).join("\r\n")+"\r\n","text/csv;charset=utf-8")};
+document.getElementById("bCsvImp").onchange=e=>{const f=e.target.files[0];e.target.value="";if(!f)return;if(!SESSION){openLogin();return}
+ const r=new FileReader();r.onload=()=>{const res=csvToItems(r.result);if(res.error){alert(res.error);return}showCsvPreview(res.items,f.name)};r.readAsText(f,"utf-8")};
+function showCsvPreview(items,name){const ok=items.filter(i=>!i.errs.length),nNew=ok.filter(i=>!i.match).length,nUp=ok.length-nNew,nErr=items.length-ok.length;
+ const mb=document.getElementById("mbox");mb.classList.add("wide");
+ mb.innerHTML=`<div class="fhead"><h2 style="margin:0">⬆ Pratinjau import CSV</h2><button class="close" onclick="closeD()">✕</button></div>
+ <p class="sub" style="margin-top:-6px">${esc(name)} · ${items.length} baris · <b>${nNew}</b> baru · <b>${nUp}</b> diperbarui · <b style="color:#b4441d">${nErr}</b> error (tidak akan disimpan)</p>
+ <div class="prev"><table><thead><tr><th>Baris</th><th>Status</th><th>Platform</th><th>Tanggal</th><th>Caption</th><th>Views 12j</th><th>Views 7h</th></tr></thead><tbody>
+ ${items.map(i=>`<tr><td>${i.line}</td><td class="${i.errs.length?"st-err":i.match?"st-up":"st-ok"}">${i.errs.length?"⚠️ "+esc(i.errs.join("; ")):i.match?"↻ Update":"＋ Baru"}</td><td>${esc(i.plat)}</td><td>${esc(i.date)}</td><td class="c" title="${esc(i.cap)}">${esc(i.cap)}</td><td>${fmt(i.row.h12_views)}</td><td>${i.row.w1_views==null?"—":fmt(i.row.w1_views)}</td></tr>`).join("")}
+ </tbody></table></div><p class="sub" style="font-size:12px">Konten dicocokkan berdasarkan platform + caption + tanggal upload, jadi tidak akan dobel. Thumbnail tidak diubah.</p>
+ <div class="factions"><button class="btn" onclick="closeD()">Batal</button><button class="btn dark" id="csvGo" ${ok.length?"":"disabled"}>Simpan ${ok.length} baris</button></div>`;
+ document.getElementById("modal").classList.add("on");
+ document.getElementById("csvGo").onclick=async ev=>{const b=ev.target;b.disabled=true;b.textContent="Menyimpan…";
+  try{const ins=ok.filter(i=>!i.match).map(i=>i.row);if(ins.length){const {error}=await SB.from("posts").insert(ins);if(error)throw error}
+   for(const i of ok.filter(i=>i.match)){const {data,error}=await SB.from("posts").update(i.row).eq("id",i.match.id).select("id");if(error)throw error;if(!data.length)throw new Error("Tidak tersimpan — coba masuk lagi.")}
+   await loadData();closeD();refresh();toast(`✅ ${nNew} baru, ${nUp} diperbarui`)}catch(err){b.disabled=false;b.textContent=`Simpan ${ok.length} baris`;dbErr(err)}}}
 /* ===== AUTH ===== */
 function openLogin(){const mb=document.getElementById("mbox");mb.classList.remove("wide");
  mb.innerHTML=`<div class="fhead"><h2 style="margin:0">🔑 Masuk</h2><button class="close" onclick="closeD()">✕</button></div><p class="sub" style="margin-top:-6px">Khusus tim yang mengelola konten.</p>
